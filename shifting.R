@@ -5,7 +5,6 @@ library(readxl)
 library(plyranges)
 library(rtracklayer)
 library(clusterProfiler)
-library(org.Dr.eg.db)
 library(ReactomePA)
 
 #########################
@@ -15,8 +14,10 @@ library(ReactomePA)
 # Bash command to get CAGE bigWigs
 # wget -r -np -nd -A plus.bw,minus.bw -I /downloads/danRer7/ http://zeprome.genereg.net/downloads/danRer7/
 
-# Read in sample sheet
-samples <- read.delim("samples.txt", sep = "\t")
+samples <- data.frame(sample_name = before_last_dot(before_last_dot(list.files("bigwigs", pattern = "plus"))), 
+                      file_1 = list.files("bigwigs", full.names = TRUE, pattern = "plus"), 
+                      file_2 = list.files("bigwigs", full.names = TRUE, pattern = "minus"),
+                      condition = before_last_dot(before_last_dot(list.files("bigwigs", pattern = "plus"))))
 
 # Read in annotation
 annotation <- file.path("danRer7.refGene.gtf")
@@ -45,10 +46,10 @@ exp <- annotate_features(exp, data_type = "tss", feature_type = "transcript",
 
 threshold_data <- explore_thresholds(exp, steps = 1, max_threshold = 20, 
                                      samples = c(
-                                       "unfertilized_egg", "fertilized_egg", "64_cell", 
-                                       "512_cell", "high", "oblong", "sphere", "30p_dome",
-                                       "shield", "somites", "prim6", "prim6_rep1",
-                                       "prim6_rep2", "prim20"), 
+                                       "unfertilized.egg", "fertilized.egg", "64cells", 
+                                       "512cells", "high", "oblong", "sphere", "30p.dome",
+                                       "shield", "somites", "prim6", "prim6.rep1",
+                                       "prim6_=.rep2", "prim20"), 
                                      use_normalized = FALSE)
 
 plot_threshold_exploration(threshold_data, ncol = 4, point_size = 1) +
@@ -65,17 +66,17 @@ exp <- tss_clustering(exp, threshold = 5, max_distance = 25)
 ### Unfertilized egg pairwise vs. all other time points
 
 # Remove unfertilized egg from the list of samples to loop over in order to prevent self-comparison
-the_shift_list <- filter(exp@meta_data$sample_sheet, sample_name != "unfertilized_egg") %>%
+the_shift_list <- filter(exp@meta_data$sample_sheet, sample_name != "unfertilized.egg") %>%
   dplyr::select(sample_name) %>%
   as_tibble
 
 # Perform pairwise shift analyses
 for(sample in the_shift_list$sample_name) {
   exp <- tss_shift(exp, 
-                   sample_1 = c(TSS = "unfertilized_egg", TSR = "unfertilized_egg"),
+                   sample_1 = c(TSS = "unfertilized.egg", TSR = "unfertilized.egg"),
                    sample_2 = c(TSS = sample, TSR = sample),
                    max_distance = 100, min_threshold = 10, n_resamples = 1000L,
-                   comparison_name = str_c("unfertilized_egg_vs_", sample))
+                   comparison_name = str_c("unfertilized.egg.vs.", sample))
 }
 
 # Plot numbers of detected significant shifts for each comparison
@@ -142,13 +143,13 @@ plot_shift_rank(exp) +
   geom_vline(xintercept = 0) +
   scale_fill_viridis_c()
 
-samples <- c("unfertilized_egg_vs_fertilized_egg", "unfertilized_egg_vs_64_cell", 
-                  "unfertilized_egg_vs_512_cell", "unfertilized_egg_vs_high", 
-                  "unfertilized_egg_vs_oblong", "unfertilized_egg_vs_sphere", 
-                  "unfertilized_egg_vs_30p_dome", "unfertilized_egg_vs_shield", 
-                  "unfertilized_egg_vs_somites", "unfertilized_egg_vs_prim6",
-                  "unfertilized_egg_vs_prim6_rep1", "unfertilized_egg_vs_prim6_rep2",
-                  "unfertilized_egg_vs_prim20")
+samples <- c("unfertilized.egg.vs.fertilized.egg", "unfertilized.egg.vs.64cells", 
+                  "unfertilized.egg.vs.512cells", "unfertilized.egg.vs.high", 
+                  "unfertilized.egg.vs.oblong", "unfertilized.egg.vs.sphere", 
+                  "unfertilized.egg.vs.30p_dome", "unfertilized.egg.vs.shield", 
+                  "unfertilized.egg.vs.somites", "unfertilized.egg.vs.prim6",
+                  "unfertilized.egg.vs.prim6.rep1", "unfertilized.egg.vs.prim6.rep2",
+                  "unfertilized.egg.vs.prim20")
 
 # Plot shift counts
 plot_shift_count(exp, samples = samples) +
