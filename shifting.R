@@ -82,9 +82,6 @@ for(sample in the_shift_list$sample_name) {
 }
 
 # Plot numbers of detected significant shifts for each comparison
-
-exp@shifting
-
 map(exp@shifting$results, function(x) {
   x %>% 
   mutate(shift_status = case_when(
