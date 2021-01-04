@@ -49,7 +49,7 @@ threshold_data <- explore_thresholds(exp, steps = 1, max_threshold = 20,
                                        "unfertilized.egg", "fertilized.egg", "64cells", 
                                        "512cells", "high", "oblong", "sphere.dome", "30p.dome",
                                        "shield", "somites", "prim6", "prim6.rep1",
-                                       "prim6_=.rep2", "prim20"), 
+                                       "prim6.rep2", "prim20"), 
                                      use_normalized = FALSE)
 
 plot_threshold_exploration(threshold_data, ncol = 4, point_size = 1) +
