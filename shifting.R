@@ -47,7 +47,7 @@ exp <- annotate_features(exp, data_type = "tss", feature_type = "transcript",
 threshold_data <- explore_thresholds(exp, steps = 1, max_threshold = 20, 
                                      samples = c(
                                        "unfertilized.egg", "fertilized.egg", "64cells", 
-                                       "512cells", "high", "oblong", "sphere", "30p.dome",
+                                       "512cells", "high", "oblong", "sphere.dome", "30p.dome",
                                        "shield", "somites", "prim6", "prim6.rep1",
                                        "prim6_=.rep2", "prim20"), 
                                      use_normalized = FALSE)
