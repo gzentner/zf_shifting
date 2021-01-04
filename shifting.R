@@ -59,7 +59,7 @@ plot_threshold_exploration(threshold_data, ncol = 4, point_size = 1) +
   xlim(0,20)
 
 # Cluster TSSs
-exp <- tss_clustering(exp, threshold = 5, max_distance = 25)
+exp <- tss_clustering(exp, threshold = 5, max_distance = 25, max_width = 250)
 
 #########################
 ### Shifting analysis ###
