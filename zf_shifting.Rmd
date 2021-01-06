@@ -4,6 +4,10 @@ author: "Gabe Zentner"
 output: html_document
 ---
 
+<!-- wget command to get bigwigs -->
+<!-- wget -r -np -nd -A plus.bw,minus.bw -I /zebrafish/CAGE/ \ -->
+<!-- http://promshift.genereg.net/zebrafish/CAGE/ -->
+
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE,
                       message = FALSE,
@@ -14,13 +18,7 @@ knitr::opts_chunk$set(echo = TRUE,
 library(TSRexploreR)
 library(filesstrings)
 library(tidyverse)
-library(GenomicRanges)
-library(readxl)
-library(plyranges)
-library(rtracklayer)
-library(org.Dr.eg.db)
-library(clusterProfiler)
-library(ReactomePA)
+library(writexl)
 ```
 
 ### Data preparation
@@ -64,8 +62,7 @@ threshold_data <- explore_thresholds(exp, steps = 1, max_threshold = 20,
                                      samples = c(
                                        "unfertilized.egg", "fertilized.egg", "64cells", 
                                        "512cells", "high", "oblong", "sphere.dome", "30p.dome",
-                                       "shield", "somites", "prim6", "prim6.rep1",
-                                       "prim6.rep2", "prim20"), 
+                                       "shield", "somites", "prim6", "prim20"), 
                                      use_normalized = FALSE)
 
 # Plot threshold analysis
@@ -83,7 +80,7 @@ exp <- tss_clustering(exp, threshold = 5, max_distance = 25, max_width = 250)
 ```{r}
 # Remove unfertilized egg from the list of samples to loop over in order to prevent self-comparison
 the_shift_list <- filter(exp@meta_data$sample_sheet, sample_name != "unfertilized.egg") %>%
-  dplyr::select(sample_name) %>%
+  select(sample_name) %>%
   as_tibble
 
 # Perform pairwise shift analyses
@@ -116,7 +113,6 @@ map(exp@shifting$results, function(x) {
                               "unfertilized.egg.vs.oblong", "unfertilized.egg.vs.sphere.dome", 
                               "unfertilized.egg.vs.30p.dome", "unfertilized.egg.vs.shield", 
                               "unfertilized.egg.vs.somites", "unfertilized.egg.vs.prim6",
-                              "unfertilized.egg.vs.prim6.rep1", "unfertilized.egg.vs.prim6.rep2",
                               "unfertilized.egg.vs.prim20")) %>%
   ggplot(aes(x = sample, fill = n$shift_status, y = n$n)) +
   geom_col(position = "stack") +
@@ -150,9 +146,14 @@ plot_genomic_distribution(distribution) +
   scale_fill_viridis_d(direction = -1)
 ```
 
+### Write shifts to XLSX format for supplement
+```{r}
+write_xlsx(exp@shifting$results, "zf_shifting.xlsx")
+```
+
 ### Gene tracks
 ```{r fig.align = "center"}
-for(i in c("luc7l", "setd3", "ccni")) {
+for(i in c("uggt1", "braf")) {
   gene_tracks(exp, feature_name = i, promoter_only = TRUE, 
               samples = c(TSS = "unfertilized.egg", TSS ="prim20"),
               use_normalized = FALSE, axis_scale = 1, upstream = 100, 
