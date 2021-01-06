@@ -1,7 +1,6 @@
 ---
 title: "Zebrafish CAGE shifting analysis"
 author: "Gabe Zentner"
-date: "1/4/2021"
 output: html_document
 ---
 
@@ -56,10 +55,9 @@ exp <- format_counts(exp, data_type = "tss")
 
 ### Threshold exploration
 ```{r fig.align = "center"}
-
 # Annotate TSSs relative to known genomic features
 exp <- annotate_features(exp, data_type = "tss", feature_type = "transcript", 
-                         upstream = 500, downstream = 500, )
+                         upstream = 500, downstream = 500)
 
 # Perform threshold analysis
 threshold_data <- explore_thresholds(exp, steps = 1, max_threshold = 20, 
@@ -75,6 +73,7 @@ plot_threshold_exploration(threshold_data, ncol = 4, point_size = 1) +
   scale_color_viridis_c() +
   xlim(0,20)
 ```
+
 ### TSR detection
 ```{r}
 exp <- tss_clustering(exp, threshold = 5, max_distance = 25, max_width = 250)
@@ -153,23 +152,12 @@ plot_genomic_distribution(distribution) +
 
 ### Gene tracks
 ```{r fig.align = "center"}
-gene_tracks(exp, feature_name = "cenpe", promoter_only = TRUE, 
-            samples = c(TSS = "unfertilized.egg", TSS ="prim20"),
-            use_normalized = FALSE, axis_scale = 1, upstream = 100,
-            tss_colors = viridis::viridis(4)
-            )
-
-gene_tracks(exp, feature_name = "rpl35", promoter_only = TRUE, 
-            samples = c(TSS = "unfertilized.egg", TSS ="prim20"),
-            use_normalized = FALSE, axis_scale = 1, upstream = 100,
-            tss_colors = viridis::viridis(4)
-            )
-
-gene_tracks(exp, feature_name = "zbtb22b", promoter_only = TRUE, 
-            samples = c(TSS = "unfertilized.egg", TSS ="prim20"),
-            use_normalized = FALSE, axis_scale = 1, upstream = 100,
-            tss_colors = viridis::viridis(4)
-            )
-
-
+for(i in c("luc7l", "setd3", "ccni")) {
+  gene_tracks(exp, feature_name = i, promoter_only = TRUE, 
+              samples = c(TSS = "unfertilized.egg", TSS ="prim20"),
+              use_normalized = FALSE, axis_scale = 1, upstream = 100, 
+              downstream = 200, feature_type = "gene", 
+              tss_colors = viridis::viridis(4)
+              )
+}
 ```
