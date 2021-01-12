@@ -14,9 +14,6 @@ zf_cageset <- importPublicData(source = "ZebrafishDevelopment",
                                group = "development", 
                                sample = zf_samples)
 
-corr.m <- plotCorrelation2(zf_cageset, samples = c("zf_unfertilized_egg", "zf_fertilized_egg"),
-                           tagCountThreshold = 1, applyThresholdBoth = FALSE, method = "pearson")
-
 librarySizes(zf_cageset)
 
 # Normalize
@@ -26,5 +23,19 @@ normalizeTagCount(zf_cageset, method = "powerLaw", fitInRange = c(5,1000), alpha
 
 # Cluster TSSs into TSRs
 clusterCTSS(object = zf_cageset, threshold = 1, thresholdIsTpm = TRUE, nrPassThreshold = 1,
-            method = "distclu", maxDist = 25, removeSingletons = FALSE, keepSingletonsAbove = 5)
+            method = "distclu", maxDist = 25, removeSingletons = FALSE, keepSingletonsAbove = 5,
+            useMulticore = TRUE)
 
+cumulativeCTSSdistribution(zf_cageset, clusters = "tagClusters", useMulticore = TRUE)
+quantilePositions(zf_cageset, clusters = "tagClusters", qLow = 0.1, qUp = 0.9)
+
+aggregateTagClusters(zf_cageset, tpmThreshold = 5, maxDist = 100, qLow = 0.1, qUp = 0.9)
+
+cumulativeCTSSdistribution(zf_cageset, clusters = "consensusClusters", useMulticore = TRUE)
+
+scoreShift(zf_cageset, groupX = "zf_unfertilized_egg", groupY = "zf_prim20", testKS = TRUE, useTpmKS = FALSE)
+
+shifting.promoters <- getShiftingPromoters(zf_cageset,
+      tpmThreshold = 10,
+      fdrThreshold = 0.01)
+head(shifting.promoters)

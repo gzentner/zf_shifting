@@ -18,6 +18,7 @@ knitr::opts_chunk$set(echo = TRUE,
 library(TSRexploreR)
 library(filesstrings)
 library(tidyverse)
+library(GenomicRanges)
 library(writexl)
 ```
 
@@ -27,7 +28,7 @@ library(writexl)
 samples <- data.frame(sample_name = before_last_dot(before_last_dot(list.files("bigwigs", pattern = "plus"))), 
                       file_1 = list.files("bigwigs", full.names = TRUE, pattern = "plus"), 
                       file_2 = list.files("bigwigs", full.names = TRUE, pattern = "minus"),
-                      condition = before_last_dot(before_last_dot(list.files("bigwigs", pattern = "plus"))))
+                      condition = "zf")
 
 # Read in annotation
 annotation <- file.path("danRer7.refGene.gtf")
@@ -83,7 +84,7 @@ the_shift_list <- filter(exp@meta_data$sample_sheet, sample_name != "unfertilize
   select(sample_name) %>%
   as_tibble
 
-# Perform pairwise shift analyses
+# Perform pairwise shift analyses (2-sample TSR merge)
 for(sample in the_shift_list$sample_name) {
   exp <- tss_shift(exp, 
                    sample_1 = c(TSS = "unfertilized.egg", TSR = "unfertilized.egg"),
@@ -91,12 +92,24 @@ for(sample in the_shift_list$sample_name) {
                    max_distance = 100, min_threshold = 10, n_resamples = 1000L,
                    comparison_name = str_c("unfertilized.egg.vs.", sample))
 }
+
+# Merged TSR shifting analysis (all samples' TSRs merged)
+exp <- merge_samples(exp, data_type = "tsr", merge_group = "condition")
+
+for(sample in the_shift_list$sample_name) {
+  exp <- tss_shift(exp, 
+                   sample_1 = c(TSS = "unfertilized.egg", TSR = "unfertilized.egg"),
+                   sample_2 = c(TSS = sample, TSR = "zf"),
+                   max_distance = 100, min_threshold = 10, n_resamples = 1000L,
+                   comparison_name = str_c("unfertilized.egg.vs.", sample))
+}
+
 ```
 
 ### Shift number plot
 ```{r fig.align = "center"}
 map(exp@shifting$results, function(x) {
-  x %>% 
+  x %>%
   mutate(shift_status = case_when(
     shift_score < 0 ~ "upstream",
     shift_score > 0 ~ "downstream",
@@ -104,14 +117,14 @@ map(exp@shifting$results, function(x) {
   )) %>%
     group_by(shift_status) %>%
     count
-}) %>% 
-  as_tibble %>% 
+}) %>%
+  as_tibble %>%
   pivot_longer(everything(), names_to = "sample", values_to = "n") %>%
-  mutate(sample = fct_relevel(sample, 
-                              "unfertilized.egg.vs.fertilized.egg", "unfertilized.egg.vs.64cells", 
-                              "unfertilized.egg.vs.512cells", "unfertilized.egg.vs.high", 
-                              "unfertilized.egg.vs.oblong", "unfertilized.egg.vs.sphere.dome", 
-                              "unfertilized.egg.vs.30p.dome", "unfertilized.egg.vs.shield", 
+  mutate(sample = fct_relevel(sample,
+                              "unfertilized.egg.vs.fertilized.egg", "unfertilized.egg.vs.64cells",
+                              "unfertilized.egg.vs.512cells", "unfertilized.egg.vs.high",
+                              "unfertilized.egg.vs.oblong", "unfertilized.egg.vs.sphere.dome",
+                              "unfertilized.egg.vs.30p.dome", "unfertilized.egg.vs.shield",
                               "unfertilized.egg.vs.somites", "unfertilized.egg.vs.prim6",
                               "unfertilized.egg.vs.prim20")) %>%
   ggplot(aes(x = sample, fill = n$shift_status, y = n$n)) +
@@ -153,11 +166,11 @@ write_xlsx(exp@shifting$results, "zf_shifting.xlsx")
 
 ### Gene tracks
 ```{r fig.align = "center"}
-for(i in c("uggt1", "braf")) {
+for(i in c("exd2")) {
   gene_tracks(exp, feature_name = i, promoter_only = TRUE, 
-              samples = c(TSS = "unfertilized.egg", TSS ="prim20"),
-              use_normalized = FALSE, axis_scale = 1, upstream = 100, 
-              downstream = 200, feature_type = "gene", 
+              samples = c(TSS = "unfertilized.egg", TSS ="fertilized.egg"),
+              use_normalized = FALSE, axis_scale = 1, upstream = 50, 
+              downstream = 50, feature_type = "gene", 
               tss_colors = viridis::viridis(4)
               )
 }
