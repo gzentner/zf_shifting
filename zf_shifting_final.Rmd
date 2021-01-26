@@ -111,39 +111,6 @@ exp <- tss_shift(exp,
                    sample_2 = c(TSS = "prim20", TSR = "prim20"),
                    max_distance = 100, min_threshold = 10, n_resamples = 1000L,
                    comparison_name = "prim20_vs_unfertilized_egg", fdr_cutoff = 0.05)
-
-plot_shift_count(exp)
-
-```
-
-### Shift number plot
-```{r fig.align = "center"}
-map(exp@shifting$results, function(x) {
-  x %>%
-  mutate(shift_status = case_when(
-    shift_score < 0 ~ "upstream",
-    shift_score > 0 ~ "downstream",
-    TRUE ~ "unshifted"
-  )) %>%
-    group_by(shift_status) %>%
-    count
-}) %>%
-  as_tibble %>%
-  pivot_longer(everything(), names_to = "sample", values_to = "n") %>%
-  mutate(sample = fct_relevel(sample,
-                              "unfertilized.egg.vs.fertilized.egg", "unfertilized.egg.vs.64cells",
-                              "unfertilized.egg.vs.512cells", "unfertilized.egg.vs.high",
-                              "unfertilized.egg.vs.oblong", "unfertilized.egg.vs.sphere.dome",
-                              "unfertilized.egg.vs.30p.dome", "unfertilized.egg.vs.shield",
-                              "unfertilized.egg.vs.somites", "unfertilized.egg.vs.prim6",
-                              "unfertilized.egg.vs.prim20")) %>%
-  ggplot(aes(x = sample, fill = n$shift_status, y = n$n)) +
-  geom_col(position = "stack") +
-  theme_bw() +
-  theme(panel.grid = element_blank()) +
-  scale_y_continuous(expand = c(0,0), limits = c(0,1550)) +
-  scale_fill_viridis_d(end = 0.5) +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1))
 ```
 
 ### Shift score rank plots
@@ -156,15 +123,6 @@ plot_shift_rank(exp) +
   geom_hline(yintercept = 0) +
   geom_vline(xintercept = 0) +
   scale_fill_viridis_c()
-```
-
-### Distribution of shifted TSRs
-```{r fig.align = "center"}
-exp <- annotate_features(exp, data_type = "shift", feature_type = "transcript", 
-                         upstream = 500, downstream = 500)
-
-plot_genomic_distribution(exp, data_type = "shift") +
-  scale_fill_viridis_d(direction = -1)
 ```
 
 ### Write shifts to XLSX format for supplement
